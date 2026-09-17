@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>tutto ok?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sun:#f8e6c4;
+    --amber:#eeb877;
+    --terra:#d38f57;
+    --rust:#b5563a;
+    --gold:#e3a857;
+    --gold-soft:#f3d29a;
+    --ink:#5c3319;
+    --ink-soft:#8a5a3a;
+    --card-dark:#3c2214;
+    --card-darker:#2a160b;
+    --track-unlit:#a9805e;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--sun);
+    overflow:hidden;
+  }
+
+  body{
+    font-family:'Work Sans', sans-serif;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    min-height:100dvh;
+    position:relative;
+  }
+
+  /* ---------- sfondo caldo, accogliente ---------- */
+  .stage{
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(120% 90% at 50% 10%, rgba(255,250,240,0.55), rgba(255,250,240,0) 55%),
+      radial-gradient(90% 70% at 10% 100%, rgba(211,143,87,0.6), rgba(211,143,87,0) 60%),
+      radial-gradient(90% 70% at 100% 100%, rgba(181,86,58,0.3), rgba(181,86,58,0) 60%),
+      linear-gradient(180deg, var(--sun) 0%, var(--amber) 55%, var(--terra) 100%);
+  }
+
+  .stage::before{
+    content:"";
+    position:absolute; inset:0;
+    opacity:0.035;
+    mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .stage::after{
+    content:"";
+    position:absolute;
+    left:-10%; right:-10%; bottom:-18%;
+    height:46%;
+    background:radial-gradient(60% 100% at 50% 100%, rgba(150,80,44,0.4), rgba(150,80,44,0) 70%);
+    filter:blur(2px);
+  }
+
+  /* ---------- card centrale ---------- */
+  .card{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:420px;
+    padding:calc(env(safe-area-inset-top,0px) + 34px) 28px calc(env(safe-area-inset-bottom,0px) + 34px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:56px;
+  }
+
+  .headline{
+    margin:0;
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:clamp(2.2rem, 9vw, 2.8rem);
+    letter-spacing:0.01em;
+    color:var(--ink);
+    text-shadow:0 2px 14px rgba(255,255,255,0.4);
+  }
+
+  /* ---------- zona slider ---------- */
+  .slider-zone{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+  }
+
+  .emoji-scale{
+    position:relative;
+    width:100%;
+    height:40px;
+  }
+
+  .emoji-scale span{
+    position:absolute;
+    top:0;
+    transform:translateX(-50%) scale(0.86);
+    font-size:1.5rem;
+    filter:grayscale(0.15) opacity(0.5);
+    transition:transform 220ms cubic-bezier(.34,1.56,.64,1), filter 220ms ease;
+    line-height:1;
+  }
+
+  .emoji-scale span.active{
+    transform:translateX(-50%) scale(1.3);
+    filter:grayscale(0) opacity(1) drop-shadow(0 0 10px rgba(227,168,87,0.6));
+  }
+
+  /* --- il cursore vero e proprio: componente custom, non un <input> travestito --- */
+  .slider{
+    position:relative;
+    width:100%;
+    height:64px;
+    display:flex;
+    align-items:center;
+    touch-action:none;
+    cursor:pointer;
+    outline:none;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+
+  .slider-track{
+    position:absolute;
+    left:0; right:0;
+    height:20px;
+    border-radius:999px;
+    background:linear-gradient(180deg, #8f6a4b, var(--track-unlit));
+    box-shadow:
+      inset 0 3px 7px rgba(40,20,8,0.5),
+      inset 0 -1px 1px rgba(255,255,255,0.18);
+    overflow:hidden;
+  }
+
+  .slider-track-notches{
+    position:absolute;
+    inset:0;
+    display:flex;
+    justify-content:space-between;
+    padding:0 3px;
+    align-items:center;
+    pointer-events:none;
+  }
+  .slider-track-notches i{
+    width:2px; height:6px;
+    border-radius:1px;
+    background:rgba(40,20,8,0.25);
+  }
+
+  .slider-fill{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:50%;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--rust), var(--gold) 85%);
+    box-shadow:
+      0 0 20px rgba(227,168,87,0.7),
+      inset 0 1px 1px rgba(255,255,255,0.4);
+  }
+
+  .slider-thumb{
+    position:absolute;
+    top:50%; left:0;
+    width:58px; height:58px;
+    transform:translate(-50%,-50%);
+    z-index:4;
+    pointer-events:none;
+  }
+
+  .slider-thumb-visual{
+    width:100%; height:100%;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 35% 28%, #ffe9c2, var(--gold) 55%, #b5772f 100%);
+    box-shadow:
+      0 6px 16px rgba(0,0,0,0.4),
+      0 0 0 5px rgba(255,255,255,0.35),
+      inset 0 1px 2px rgba(255,255,255,0.6);
+    transform:scale(1);
+    transition:transform 260ms cubic-bezier(.34,1.56,.64,1), box-shadow 220ms ease;
+    animation:thumbPulse 2.6s ease-in-out infinite;
+  }
+
+  .slider.dragging .slider-thumb-visual{
+    animation:none;
+    transform:scale(1.16);
+    box-shadow:
+      0 12px 28px rgba(0,0,0,0.45),
+      0 0 0 10px rgba(255,255,255,0.28),
+      inset 0 1px 2px rgba(255,255,255,0.65);
+  }
+
+  @keyframes thumbPulse{
+    0%,100%{ box-shadow:0 6px 16px rgba(0,0,0,0.4), 0 0 0 5px rgba(255,255,255,0.35), inset 0 1px 2px rgba(255,255,255,0.6); }
+    50%{ box-shadow:0 6px 16px rgba(0,0,0,0.4), 0 0 0 9px rgba(255,255,255,0.5), inset 0 1px 2px rgba(255,255,255,0.6); }
+  }
+
+  .slider-thumb-visual svg{ width:26px; height:26px; filter:drop-shadow(0 1px 1px rgba(70,35,10,0.5)); }
+
+  .slider:focus-visible .slider-thumb-visual{
+    box-shadow:0 0 0 4px rgba(92,51,25,0.55), 0 6px 16px rgba(0,0,0,0.4);
+  }
+
+  .end-labels{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    font-family:'Work Sans', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    letter-spacing:0.14em;
+    color:var(--ink-soft);
+  }
+  .end-labels .no{ color:#a8442c; }
+  .end-labels .si{ color:#8a5a1e; }
+
+  /* ---------- banner di conferma: overlay a schermo intero ---------- */
+  .banner{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    background:rgba(38,20,10,0.6);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 380ms ease;
+  }
+  .banner.show{ opacity:1; pointer-events:auto; }
+
+  .banner-card{
+    width:100%;
+    max-width:320px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    padding:40px 30px 34px;
+    border-radius:28px;
+    background:linear-gradient(180deg, var(--card-dark), var(--card-darker));
+    border:1px solid rgba(227,168,87,0.35);
+    box-shadow:0 26px 60px rgba(20,10,5,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    text-align:center;
+    transform:scale(0.86) translateY(10px);
+    transition:transform 440ms cubic-bezier(.22,1,.36,1);
+  }
+  .banner.show .banner-card{ transform:scale(1) translateY(0); }
+
+  .banner-icon{
+    width:58px; height:58px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 35% 30%, #ffe6b8, var(--gold) 58%, #b5772f 100%);
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+  }
+  .banner-icon svg{ width:26px; height:26px; filter:drop-shadow(0 1px 1px rgba(70,35,10,0.5)); }
+
+  .banner-title{
+    margin:0;
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:1.4rem;
+    line-height:1.32;
+    color:var(--gold-soft);
+  }
+
+  .banner-sub{
+    font-family:'Work Sans', sans-serif;
+    font-size:0.78rem;
+    letter-spacing:0.05em;
+    color:#caa981;
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage"></div>
+
+  <main class="card">
+    <h1 class="headline">tutto ok?</h1>
+
+    <div class="slider-zone">
+      <div class="emoji-scale" id="emojiScale"></div>
+
+      <div class="slider" id="slider" role="slider" tabindex="0"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+           aria-label="Come stai, da NO a SI">
+        <div class="slider-track">
+          <div class="slider-fill" id="sliderFill"></div>
+        </div>
+        <div class="slider-track-notches" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="slider-thumb" id="thumb">
+          <div class="slider-thumb-visual">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 2 3.5 14H11l-1.5 8L20 10h-7.5L13 2Z" fill="#4a2c14"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="end-labels">
+        <span class="no">NO</span>
+        <span class="si">SI</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="banner" id="banner">
+    <div class="banner-card">
+      <div class="banner-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2 3.5 14H11l-1.5 8L20 10h-7.5L13 2Z" fill="#4a2c14"/>
+        </svg>
+      </div>
+      <p class="banner-title">a Luca interessa<br>come stai :)</p>
+      <span class="banner-sub">grazie per avermelo detto</span>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const TELEGRAM_TOKEN = "8993812213:AAFyBzEvFlwZdzAy7oj2tIatg6lbTfNSZkk";
+  const TELEGRAM_CHAT_ID = "8604822312";
+
+  const stops = [
+    { pct: 0,   emoji: "😞" },
+    { pct: 17,  emoji: "😕" },
+    { pct: 33,  emoji: "😐" },
+    { pct: 50,  emoji: "🙂" },
+    { pct: 67,  emoji: "😊" },
+    { pct: 83,  emoji: "😄" },
+    { pct: 100, emoji: "🤩" }
+  ];
+
+  const scaleEl = document.getElementById('emojiScale');
+  stops.forEach(s => {
+    const span = document.createElement('span');
+    span.textContent = s.emoji;
+    span.style.left = s.pct + '%';
+    span.dataset.pct = s.pct;
+    scaleEl.appendChild(span);
+  });
+  const emojiEls = Array.from(scaleEl.children);
+
+  const slider = document.getElementById('slider');
+  const thumb = document.getElementById('thumb');
+  const fill = document.getElementById('sliderFill');
+  const banner = document.getElementById('banner');
+
+  let value = 50;
+  let trackWidth = 0;
+  let dragging = false;
+  let rafId = null;
+  let finalizeTimer = null;
+
+  function measure(){
+    trackWidth = slider.getBoundingClientRect().width;
+  }
+
+  function updateEmoji(pct){
+    let closest = emojiEls[0];
+    let closestDist = Infinity;
+    emojiEls.forEach(el => {
+      const d = Math.abs(Number(el.dataset.pct) - pct);
+      if (d < closestDist){ closestDist = d; closest = el; }
+      el.classList.remove('active');
+    });
+    closest.classList.add('active');
+  }
+
+  function render(){
+    const x = (value / 100) * trackWidth;
+    thumb.style.transform = `translate(calc(${x}px - 50%), -50%)`;
+    fill.style.width = value + '%';
+    slider.setAttribute('aria-valuenow', String(value));
+    updateEmoji(value);
+  }
+
+  function scheduleRender(){
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(() => { render(); rafId = null; });
+  }
+
+  function setValueFromClientX(clientX){
+    const rect = slider.getBoundingClientRect();
+    let pct = ((clientX - rect.left) / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    value = Math.round(pct);
+    scheduleRender();
+  }
+
+  function labelFor(pct){
+    let best = stops[0];
+    let bestDist = Infinity;
+    stops.forEach(s => {
+      const d = Math.abs(s.pct - pct);
+      if (d < bestDist){ bestDist = d; best = s; }
+    });
+    return best.emoji;
+  }
+
+  async function sendToTelegram(pct){
+    const emoji = labelFor(pct);
+    const text = `Come sto: ${pct}% ${emoji}`;
+    try{
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text })
+      });
+    }catch(e){
+      /* invio silenzioso: se la rete non risponde, non blocchiamo l'esperienza */
+    }
+  }
+
+  function showBanner(){
+    banner.classList.add('show');
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(() => banner.classList.remove('show'), 3200);
+  }
+
+  function finalize(){
+    sendToTelegram(value);
+    showBanner();
+  }
+
+  function debounceFinalize(){
+    clearTimeout(finalizeTimer);
+    finalizeTimer = setTimeout(finalize, 500);
+  }
+
+  // ---- puntatore (mouse + touch, unificati) ----
+  slider.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    slider.classList.add('dragging');
+    slider.focus({ preventScroll:true });
+    try{ slider.setPointerCapture(e.pointerId); }catch(err){}
+    setValueFromClientX(e.clientX);
+  });
+
+  slider.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    setValueFromClientX(e.clientX);
+  });
+
+  function endDrag(){
+    if (!dragging) return;
+    dragging = false;
+    slider.classList.remove('dragging');
+    finalize();
+  }
+  slider.addEventListener('pointerup', endDrag);
+  slider.addEventListener('pointercancel', endDrag);
+
+  // ---- tastiera ----
+  slider.addEventListener('keydown', (e) => {
+    let delta = 0;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') delta = e.shiftKey ? 10 : 1;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') delta = e.shiftKey ? -10 : -1;
+    else if (e.key === 'Home'){ value = 0; scheduleRender(); debounceFinalize(); e.preventDefault(); return; }
+    else if (e.key === 'End'){ value = 100; scheduleRender(); debounceFinalize(); e.preventDefault(); return; }
+    else return;
+    e.preventDefault();
+    value = Math.max(0, Math.min(100, value + delta));
+    scheduleRender();
+    debounceFinalize();
+  });
+
+  banner.addEventListener('click', () => banner.classList.remove('show'));
+
+  window.addEventListener('resize', () => { measure(); render(); });
+  measure();
+  render();
+})();
+</script>
+</body>
+</html>
